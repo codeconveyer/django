@@ -84,3 +84,22 @@ on_delete:默认cascade，主表删除，从表也删除;set_null,主表删除,�
 计数
 {{ forloop.counter0 }}从零开始计数
 {{ forloop.revcounter0 }}倒着计数,到零结束
+
+### 过滤器
+{{ value | date:'Y-m-d H:m:s' }}通过|表示过滤
+y:两位年,m:月,d:日,Y:四位年
+h:12小时制,m:分,s:秒,H:24小时制
+add:进行加法计算
+floatformat:arg 四舍五入并保留arg位小数.若arg为负数,四舍五入，并保留有效小数，最多arg位;则若arg为null，则为arg=-1
+{% widthratio this_value max_value value %}:表示this_value/max_value`*`value
+{ value | divisibleby arg}:若value能被arg整除则输出True
+
+### 重命名
+同过在工程url中定义namespace，在模块url中定义name，则可以通过{% url'namespace:name' %}进行方法的读取
+
+### 请求
+- post 提交数据隐藏了
+- get 提交数据在url上,可以通过?xx=xx来获取,或者`?P<xx>\d+`来获取
+- put 更新全部数据
+- patch 更新局部信息
+- delete 删除
