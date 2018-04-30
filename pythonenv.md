@@ -69,7 +69,7 @@ on_delete:默认cascade，主表删除，从表也删除;set_null,主表删除,�
 加载static中的方法:static/images/xxx.png或者{% load static %}  {% static 'images/xx.png' %}
 
 ### 循环、判断
-{% for i in stu%}  
+{% for i in stu %}  
 {% endfor %}
 
 {% if xxx %}  
