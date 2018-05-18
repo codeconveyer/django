@@ -97,7 +97,7 @@ floatformat:arg 四舍五入并保留arg位小数.若arg为负数,四舍五入�
 同过在工程url中定义namespace，在模块url中定义name，则可以通过{% url'namespace:name' %}进行方法的读取
 
 ### 请求
-- post 提交数据隐藏了
+- post 提交数据隐藏了.在使用post时会有csrf验证，所以我们需要在页面中{% csrf_token %}
 - get 提交数据在url上,可以通过?xx=xx来获取,或者`?P<xx>\d+`来获取
 - put 更新全部数据
 - patch 更新局部信息
@@ -187,3 +187,92 @@ router.register(r'student', views.StudentEdit)
 urlpatterns += router.urls
 ```
 这个是后端的，所以使用的时候可以使用postman来进行调试，只是通过html是不能实现调试效果的。
+
+### ajax
+重构render方法
+```
+from rest_framework.renderers import JSONRenderer
+
+
+class CustomJsonRenderer(JSONRenderer):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        """
+        格式
+        {
+            'code':xxx,
+            'msg':请求成功
+            'data':返回数据
+        }
+        """
+        if renderer_context:
+            if isinstance(data, dict):
+                msg = data.pop('msg', '请求成功')
+                code = data.pop('code', 0)
+            else:
+                msg = '请求成功'
+                code = 0
+            response = renderer_context['response']
+            response.status_code = 200
+            res = {
+                'code': code,
+                'msg': msg,
+                'data': data
+            }
+            return super().render(res, accepted_media_type, renderer_context)
+        else:
+            return super().render(data, accepted_media_type, renderer_context)
+```
+这样之后，函数中的msg就是这种格式`Object {code: 0, msg: "请求成功", data: Object}`如果要获取数据的话，就需要`msg.data`
+
+- 通过ajax可以在不刷新页面的情况下进行页面数据的更新，可以给用户一个很好的使用体验。
+定义ajax函数
+```
+function addam(g_id, u_id) {
+    csrf = $('input[name="csrfmiddlewaretoken"]').val()
+    $.ajax({
+        url:'/own/addgoods/', # 转到对应的方法那
+        type:'POST',
+        data:{'g_id': g_id,'u_id': u_id},
+        dataType:'json',
+        headers:{'X-CSRFToken': csrf},
+        success:function (msg) {
+            $('#num_' + g_id).html('数量:' + msg.num)
+        },
+        error:function () {
+            alert('请求错误')
+        }
+    })
+}
+```
+ajax中对应的方法
+```
+def addGoods(request):
+    if request.method == 'POST':
+        data = {
+            'msg': '请求成功',
+            'code': '200',
+        }
+        g_id = request.POST.get('g_id')
+        u_id = request.POST.get('u_id')
+        stu = Student.objects.get(id=u_id)
+        num = stu.cart_set.filter(goods_id=g_id)
+        if num:
+            num[0].number += 1
+            num[0].save()
+            data['num'] = num[0].number
+            return JsonResponse(data)
+        else:
+            n_num = stu.cart_set.create(
+                users_id=u_id,
+                goods_id=g_id,
+                number=1
+            )
+            data['num'] = n_num.number
+            return JsonResponse(data)
+```
+页面绑定ajax函数
+```
+{% csrf_token %}
+<button type="button" onclick="addam({{ good.id }},{{ users.id }})">+</button>
+```
+通过这三步，就可以将修改之后的goods的数量在页面中进行更新。
