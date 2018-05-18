@@ -136,3 +136,54 @@ page.previous_page_number上一页页码，page.next_page_number下一页页码
 page.number当前页数
 page.paginator.page_range是一个页码range，可以通过for来遍历显示1.2.3所有页码
 ```
+
+### 日志
+日志由四个部分组成:
+- loggers &nbsp;%nbsp;用来处理传入的信息
+- handlers &nbsp;&nbsp;用来处理信息
+- filters &nbsp;&nbsp;过滤loggers传递给handlers的信息,加一些处理控制
+- formatters &nbsp;&nbsp;格式化，将我们需要保存到日志文件中的信息进行统一格式化  
+错误等级:
+- critical: &nbsp;&nbsp;重大bug
+- error: &nbsp;&nbsp;系统中有错误
+- warning: &nbsp;&nbsp;警告
+- info: &nbsp;&nbsp;正常
+- debug: &nbsp;&nbsp;调试信息
+
+### restful风格
+首先需要`pip install djangorestframework`和`pip install django-filter`,但是我们这里使用的是djangorestframework==3.4.6所以需要指定版本。
+```
+class StudentEdit(mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
+                  mixins.CreateModelMixin,
+                  viewsets.GenericViewSet):
+    # 查询所有信息
+    queryset = Stu.objects.all()
+    # 序列化
+    serializer_class = StudentSerializer
+    # 过滤
+    filter_class = StuFilter
+
+    # 排序
+    def get_queryset(self):
+        query = self.queryset
+        return query.order_by('-id')
+
+    # 软删除
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.s_delete = 1
+        instance.save()
+        return Response({'msg': '删除成功', 'code': 200})
+```
+rest的定义是在views中用class来定义的方法，所以在注册时的方法也不一样，需要通过:
+```
+from rest_framework.routers import SimpleRouter
+router = SimpleRouter()
+router.register(r'student', views.StudentEdit)
+
+urlpatterns += router.urls
+```
+这个是后端的，所以使用的时候可以使用postman来进行调试，只是通过html是不能实现调试效果的。
