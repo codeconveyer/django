@@ -71,27 +71,29 @@ cou = Course.objects.get(id=1)
 	- 取出的如果是一个`queryset`的话我们是不能通过`.`字段名这个方法来获取值的,但是我们可以通过`values`这个方法进行值得获取  
 	`Student.objects.filter(s_sex=1).values('id')` 这样就可以输出,结果如下  
 	>>> <QuerySet [{'id': '1'}, {'id': '3'}, {'id': '5'}, {'id': '7'}, {'id': '8'}]>  
-	可以看出`queryset`里面是一个个字典,而我们还有一个`values_list`方法  
+	
+	- 可以看出`queryset`里面是一个个字典,而我们还有一个`values_list`方法  
 	`Student.objects.filter(s_sex=1).values_list('id','s_sex')`  
 	>>> <QuerySet [('1', True), ('3', True), ('5', True), ('7', True), ('8', True)]>  
-	可以看出`queryset`里面是一个个元组
+	
+	- 可以看出`queryset`里面是一个个元组
 
 - 增
 	- `model.objects.create(id=1)`
 	- ```python
-	stu = model(id=1)
-	stu.save()
-	```
+	  stu = model(id=1)
+	  stu.save()
+	  ```
 	- ```python
-	dict = {'id':1}
-	model.objects.create(**dict)	
-	```
+	  dict = {'id':1}
+	  model.objects.create(**dict)	
+	  ```
 - 删
 	- `model.objects.filter(id=1).delete()` 删除是不推荐使用的。如果确实需要删除,我们可以通过定义一个布尔类型字段,1为删除,0为不删除,通过逻辑判断达到软删除的效果。
 - 改
 	- `model.objects.filter(id=1).update(id=2)` 
 	- ```python
-	stu = model.objects.get(id=1)
-	stu.id = 1
-	stu.save()
-	```
+	  stu = model.objects.get(id=1)
+	  stu.id = 1
+	  stu.save()
+	  ```
